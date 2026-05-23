@@ -1,0 +1,9 @@
+<h1>MiniShare - Feed Principal</h1>
+<hr>
+{% for post in posts %}
+    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+        <p><strong><a href="{% url 'perfil_utilizador' post.autor.username %}">@{{ post.autor.username }}</a></strong></p>
+        <p>{{ post.conteudo }}</p>
+        <a href="{% url 'detalhe_post' post.id %}">Ver Detalhes (❤️ {{ post.gostos }})</a>
+    </div>
+{% endfor %}

@@ -1,0 +1,11 @@
+<h1>Perfil de @{{ utilizador.username }}</h1>
+<p>Este utilizador já fez {{ posts.count }} publicações.</p>
+<hr>
+{% for post in posts %}
+    <div style="background: #f9f9f9; padding: 10px; margin-bottom: 5px;">
+        <p>{{ post.conteudo }}</p>
+        <small>❤️ {{ post.gostos }} gostos</small>
+    </div>
+{% endfor %}
+<br>
+<a href="{% url 'pagina_inicial' %}">⬅️ Voltar ao Feed</a>
