@@ -1,9 +1,220 @@
-<h1>Publicação de @{{ post.autor.username }}</h1>
-<p>{{ post.conteudo }}</p>
-<p>Data: {{ post.data_criacao }}</p>
-<form method="POST">
-    {% csrf_token %}
-    <button type="submit">❤️ Dar Gosto (Atual: {{ post.gostos }})</button>
-</form>
-<br>
-<a href="{% url 'pagina_inicial' %}">⬅️ Voltar ao Feed</a>
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Publicação — MiniShare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<style>
+:root{
+  --brand:#4F46E5;--brand-dark:#3730A3;--brand-light:#EEF2FF;
+  --accent:#2563EB;--white:#ffffff;--bg:#F1F5F9;
+  --surface:#ffffff;--border:#E2E8F0;
+  --text:#0F172A;--muted:#64748B;--subtle:#94A3B8;
+  --radius:14px;--radius-sm:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+
+.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;position:sticky;top:0;z-index:100}
+.nav-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:var(--brand);letter-spacing:-0.3px}
+.nav-brand-icon{width:36px;height:36px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+.nav-right{display:flex;gap:8px}
+.nav-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:var(--white);color:var(--muted)}
+.nav-btn:hover{background:var(--bg);color:var(--text)}
+.nav-btn i{font-size:16px}
+
+.container{max-width:680px;margin:0 auto;padding:2rem 1.5rem}
+
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--subtle);margin-bottom:1.25rem}
+.breadcrumb a{color:var(--brand)}
+.breadcrumb a:hover{text-decoration:underline}
+.breadcrumb i{font-size:13px}
+
+.post-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.25rem;overflow:hidden}
+.post-card-header{padding:1.25rem 1.5rem;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border)}
+
+.av-ring{width:50px;height:50px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid var(--border)}
+.av-ring svg{width:100%;height:100%;display:block}
+
+.author-name{font-size:15px;font-weight:700;color:var(--text);display:block}
+.author-handle{font-size:13px;color:var(--brand);font-weight:500;display:block;margin-top:1px}
+.author-handle:hover{text-decoration:underline}
+.author-date{font-size:12px;color:var(--subtle);display:block;margin-top:3px}
+
+.post-body{padding:1.5rem;font-size:16px;line-height:1.8;color:var(--text)}
+
+.post-info-strip{display:flex;align-items:center;gap:20px;padding:0.85rem 1.5rem;border-top:1px solid var(--border);background:#FAFBFF;font-size:13px;color:var(--muted)}
+.info-item{display:flex;align-items:center;gap:5px}
+.info-item i{font-size:14px;color:var(--subtle)}
+
+.reaction-bar{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.like-count{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700;color:var(--text);padding-right:14px;border-right:1px solid var(--border);margin-right:4px}
+.like-count i{font-size:18px;color:#EF4444}
+.react-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--white);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;font-family:inherit}
+.react-btn:hover{background:var(--bg)}
+.react-btn i{font-size:15px}
+.btn-like-main{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn-like-main:hover{background:var(--brand-dark);border-color:var(--brand-dark)}
+
+.comments-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.comments-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.comments-title{font-size:14px;font-weight:600;color:var(--text)}
+.comments-count{font-size:12px;color:var(--white);background:var(--brand);padding:2px 8px;border-radius:20px;font-weight:600}
+
+.comment-compose{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.av-sm-ring{width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;border:1px solid var(--border)}
+.av-sm-ring svg{width:100%;height:100%;display:block}
+.comment-compose textarea{flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:14px;font-family:inherit;resize:none;outline:none;color:var(--text);background:#FAFBFF;transition:border-color .15s,background .15s;line-height:1.5}
+.comment-compose textarea:focus{border-color:var(--brand);background:var(--white)}
+.send-btn{width:38px;height:38px;border-radius:var(--radius-sm);background:var(--brand);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0}
+.send-btn:hover{background:var(--brand-dark)}
+.send-btn i{font-size:16px}
+
+.comment-item{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;gap:12px}
+.comment-item:last-child{border-bottom:none}
+.comment-body{flex:1}
+.comment-user{font-size:13px;font-weight:600;color:var(--text)}
+.comment-handle{font-size:12px;color:var(--brand);margin-left:6px;font-weight:500}
+.comment-text{font-size:14px;color:var(--text);line-height:1.6;margin-top:4px}
+.comment-time{font-size:11px;color:var(--subtle);margin-top:5px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="feed.html" class="nav-brand">
+    <div class="nav-brand-icon"><i class="ti ti-share-2"></i></div>
+    MiniShare
+  </a>
+  <div class="nav-right">
+    <a href="feed.html" class="nav-btn"><i class="ti ti-arrow-left"></i> Feed</a>
+    <a href="perfil.html" class="nav-btn"><i class="ti ti-user"></i> Perfil</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="breadcrumb">
+    <a href="feed.html"><i class="ti ti-home"></i> Feed</a>
+    <i class="ti ti-chevron-right"></i>
+    <a href="perfil.html">João Pereira</a>
+    <i class="ti ti-chevron-right"></i>
+    <span>Publicação</span>
+  </div>
+
+  <div class="post-card">
+    <div class="post-card-header">
+      <!-- Avatar ilustrado -->
+      <div class="av-ring">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="#3730A3"/>
+          <path d="M32 38 Q34 20 50 18 Q66 20 68 38 Q65 28 50 26 Q35 28 32 38Z" fill="#312E81"/>
+          <ellipse cx="50" cy="78" rx="26" ry="18" fill="#4F46E5"/>
+          <rect x="43" y="52" width="14" height="14" rx="4" fill="#C7D2FE"/>
+          <circle cx="50" cy="42" r="18" fill="#C7D2FE"/>
+          <circle cx="44" cy="41" r="2.5" fill="#3730A3"/>
+          <circle cx="56" cy="41" r="2.5" fill="#3730A3"/>
+          <path d="M44 49 Q50 54 56 49" stroke="#6366F1" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <span class="author-name">João Pereira</span>
+        <a class="author-handle" href="perfil.html">@joaopereira</a>
+        <span class="author-date">23 de maio de 2026, 14:32</span>
+      </div>
+    </div>
+
+    <p class="post-body">Acabei de terminar o meu primeiro projeto em Django! A sensação é incrível. Obrigado a toda a comunidade MiniShare pelo apoio ao longo deste percurso. Quem também está a aprender Django? Deixem nos comentários!</p>
+
+    <div class="post-info-strip">
+      <span class="info-item"><i class="ti ti-heart"></i> 34 gostos</span>
+      <span class="info-item"><i class="ti ti-message-circle"></i> 2 comentários</span>
+      <span class="info-item"><i class="ti ti-share"></i> 5 partilhas</span>
+    </div>
+
+    <div class="reaction-bar">
+      <div class="like-count"><i class="ti ti-heart"></i> 34</div>
+      <form method="POST" style="margin:0">
+        {% csrf_token %}
+        <button type="submit" class="react-btn btn-like-main"><i class="ti ti-heart"></i> Dar gosto</button>
+      </form>
+      <button class="react-btn"><i class="ti ti-message-circle"></i> Comentar</button>
+      <button class="react-btn"><i class="ti ti-share"></i> Partilhar</button>
+    </div>
+  </div>
+
+  <div class="comments-card">
+    <div class="comments-header">
+      <span class="comments-title">Comentários</span>
+      <span class="comments-count">2</span>
+    </div>
+
+    <!-- Comentários de exemplo -->
+    <div class="comment-item">
+      <div class="av-sm-ring">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="#0C4A6E"/>
+          <ellipse cx="50" cy="78" rx="26" ry="18" fill="#0284C7"/>
+          <rect x="43" y="52" width="14" height="14" rx="4" fill="#BAE6FD"/>
+          <circle cx="50" cy="42" r="18" fill="#BAE6FD"/>
+          <path d="M34 36 Q36 18 50 16 Q64 18 66 36 Q62 26 50 24 Q38 26 34 36Z" fill="#075985"/>
+          <circle cx="44" cy="41" r="2.5" fill="#0C4A6E"/>
+          <circle cx="56" cy="41" r="2.5" fill="#0C4A6E"/>
+          <path d="M44 49 Q50 54 56 49" stroke="#38BDF8" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="comment-body">
+        <span class="comment-user">Ana Costa</span><span class="comment-handle">@anacosta</span>
+        <p class="comment-text">Parabéns João! Django é mesmo uma framework fantástica. Qual foi o teu projeto?</p>
+        <div class="comment-time">há 30 minutos</div>
+      </div>
+    </div>
+
+    <div class="comment-item">
+      <div class="av-sm-ring">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="#064E3B"/>
+          <ellipse cx="50" cy="78" rx="26" ry="18" fill="#0F766E"/>
+          <rect x="43" y="52" width="14" height="14" rx="4" fill="#99F6E4"/>
+          <circle cx="50" cy="42" r="18" fill="#99F6E4"/>
+          <path d="M34 38 Q37 20 50 18 Q63 20 66 38 Q62 28 50 26 Q38 28 34 38Z" fill="#065F46"/>
+          <circle cx="44" cy="41" r="2.5" fill="#064E3B"/>
+          <circle cx="56" cy="41" r="2.5" fill="#064E3B"/>
+          <path d="M44 49 Q50 54 56 49" stroke="#34D399" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="comment-body">
+        <span class="comment-user">Rui Fernandes</span><span class="comment-handle">@ruifernandes</span>
+        <p class="comment-text">Isso aí! Lembro-me do meu primeiro projeto Django, foi uma das melhores sensações. Bem-vindo ao clube! 🎉</p>
+        <div class="comment-time">há 15 minutos</div>
+      </div>
+    </div>
+
+    <!-- Caixa de novo comentário -->
+    <div class="comment-compose">
+      <div class="av-sm-ring">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="#3730A3"/>
+          <ellipse cx="50" cy="78" rx="26" ry="18" fill="#4F46E5"/>
+          <rect x="43" y="52" width="14" height="14" rx="4" fill="#C7D2FE"/>
+          <circle cx="50" cy="42" r="18" fill="#C7D2FE"/>
+          <path d="M32 38 Q34 20 50 18 Q66 20 68 38 Q65 28 50 26 Q35 28 32 38Z" fill="#312E81"/>
+          <circle cx="44" cy="41" r="2.5" fill="#3730A3"/>
+          <circle cx="56" cy="41" r="2.5" fill="#3730A3"/>
+          <path d="M44 49 Q50 54 56 49" stroke="#6366F1" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <textarea rows="2" placeholder="Escreve um comentário..."></textarea>
+      <button class="send-btn"><i class="ti ti-send"></i></button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

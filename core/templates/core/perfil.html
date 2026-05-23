@@ -1,11 +1,173 @@
-<h1>Perfil de @{{ utilizador.username }}</h1>
-<p>Este utilizador já fez {{ posts.count }} publicações.</p>
-<hr>
-{% for post in posts %}
-    <div style="background: #f9f9f9; padding: 10px; margin-bottom: 5px;">
-        <p>{{ post.conteudo }}</p>
-        <small>❤️ {{ post.gostos }} gostos</small>
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Perfil de @{{ utilizador.username }} — MiniShare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<style>
+:root{
+  --brand:#4F46E5;--brand-dark:#3730A3;--brand-light:#EEF2FF;
+  --accent:#2563EB;--white:#ffffff;--bg:#F1F5F9;
+  --surface:#ffffff;--border:#E2E8F0;
+  --text:#0F172A;--muted:#64748B;--subtle:#94A3B8;
+  --radius:14px;--radius-sm:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+
+.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;position:sticky;top:0;z-index:100}
+.nav-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:var(--brand);letter-spacing:-0.3px}
+.nav-brand-icon{width:36px;height:36px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+.nav-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:var(--white);color:var(--muted)}
+.nav-btn:hover{background:var(--bg);color:var(--text)}
+.nav-btn i{font-size:16px}
+
+.container{max-width:720px;margin:0 auto;padding:2rem 1.5rem}
+
+.profile-cover{
+  height:180px;
+  border-radius:var(--radius) var(--radius) 0 0;
+  background:#3730A3;
+  position:relative;
+  overflow:hidden;
+}
+.cover-pattern{
+  position:absolute;inset:0;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(99,102,241,0.6) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(37,99,235,0.5) 0%, transparent 40%),
+    radial-gradient(circle at 60% 80%, rgba(124,58,237,0.4) 0%, transparent 35%);
+}
+.cover-dots{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
+  background-size:28px 28px;
+}
+
+.profile-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:0 0 var(--radius) var(--radius);
+  padding:0 1.75rem 1.5rem;margin-bottom:1.5rem;
+}
+.profile-av-wrap{margin-top:-52px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end}
+.profile-avatar-ring{
+  width:100px;height:100px;border-radius:50%;
+  border:4px solid var(--white);
+  box-shadow:0 0 0 1px var(--border);
+  overflow:hidden;
+  flex-shrink:0;
+  background:#ddd;
+}
+.profile-avatar-ring svg{width:100%;height:100%;display:block}
+.profile-av-actions{display:flex;gap:8px;margin-bottom:4px}
+.btn-follow{padding:9px 22px;border-radius:var(--radius-sm);background:var(--brand);color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn-follow:hover{background:var(--brand-dark)}
+.btn-message{padding:9px 16px;border-radius:var(--radius-sm);background:none;color:var(--brand);border:1px solid var(--brand);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;display:flex;align-items:center;gap:6px}
+.btn-message:hover{background:var(--brand-light)}
+.profile-name{font-size:22px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:3px}
+.profile-handle{font-size:14px;color:var(--brand);margin-bottom:10px;font-weight:500}
+.profile-bio{font-size:14px;color:var(--muted);line-height:1.65;max-width:480px;margin-bottom:14px}
+.stats-row{display:flex;gap:2.5rem;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.stat-val{font-size:22px;font-weight:700;color:var(--text)}
+.stat-lbl{font-size:12px;color:var(--subtle);margin-top:2px}
+
+.tabs{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;padding:0 1.25rem}
+.tab{padding:14px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:6px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+.tab i{font-size:15px}
+
+.posts-wrap{background:var(--surface);border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);padding:0 1.25rem}
+.post-row{padding:1.1rem 0;border-bottom:1px solid var(--border)}
+.post-row:last-child{border-bottom:none}
+.post-content{font-size:14px;color:var(--text);line-height:1.7;margin-bottom:10px}
+.post-meta-row{display:flex;align-items:center;gap:12px}
+.meta-chip{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+.meta-chip i{font-size:14px}
+.meta-chip.likes{color:#EF4444}
+.post-date{margin-left:auto;font-size:12px;color:var(--subtle)}
+.no-posts {text-align:center;padding:2rem;color:var(--muted);font-size:14px;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="{% url 'pagina_inicial' %}" class="nav-brand">
+    <div class="nav-brand-icon"><i class="ti ti-share-2"></i></div>
+    MiniShare
+  </a>
+  <a href="{% url 'pagina_inicial' %}" class="nav-btn"><i class="ti ti-arrow-left"></i> Voltar ao feed</a>
+</nav>
+
+<div class="container">
+
+  <div class="profile-cover">
+    <div class="cover-pattern"></div>
+    <div class="cover-dots"></div>
+  </div>
+
+  <div class="profile-card">
+    <div class="profile-av-wrap">
+      <div class="profile-avatar-ring">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="#3730A3"/>
+          <ellipse cx="50" cy="78" rx="26" ry="18" fill="#4F46E5"/>
+          <rect x="43" y="52" width="14" height="14" rx="4" fill="#C7D2FE"/>
+          <circle cx="50" cy="42" r="18" fill="#C7D2FE"/>
+          <path d="M32 38 Q34 20 50 18 Q66 20 68 38 Q65 28 50 26 Q35 28 32 38Z" fill="#3730A3"/>
+          <circle cx="44" cy="41" r="2.5" fill="#3730A3"/>
+          <circle cx="56" cy="41" r="2.5" fill="#3730A3"/>
+          <path d="M44 49 Q50 54 56 49" stroke="#6366F1" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div class="profile-av-actions">
+        <button class="btn-message"><i class="ti ti-mail" style="font-size:14px"></i> Mensagem</button>
+        <button class="btn-follow">Seguir</button>
+      </div>
     </div>
-{% endfor %}
-<br>
-<a href="{% url 'pagina_inicial' %}">⬅️ Voltar ao Feed</a>
+
+    <div class="profile-name">{{ utilizador.get_full_name|default:utilizador.username }}</div>
+    <div class="profile-handle">@{{ utilizador.username }}</div>
+    <p class="profile-bio">Membro da comunidade MiniShare.</p>
+    
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-val">{{ posts.count }}</div>
+        <div class="stat-lbl">Posts</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active"><i class="ti ti-news"></i> Publicações</div>
+  </div>
+
+  <div class="posts-wrap">
+    {% for post in posts %}
+    <div class="post-row">
+      <p class="post-content">{{ post.conteudo }}</p>
+      <div class="post-meta-row">
+        <span class="meta-chip likes"><i class="ti ti-heart"></i> {{ post.gostos }}</span>
+        <a href="{% url 'detalhe_post' post.id %}" class="meta-chip" style="color:var(--brand); font-weight:500;">
+          Ver detalhes <i class="ti ti-arrow-right"></i>
+        </a>
+        <span class="post-date">{{ post.data_criacao|date:"d/m/Y H:i" }}</span>
+      </div>
+    </div>
+    {% empty %}
+    <div class="no-posts">
+      <p>Este utilizador ainda não fez nenhuma publicação.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+</body>
+</html>

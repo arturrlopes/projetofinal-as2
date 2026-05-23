@@ -1,9 +1,202 @@
-<h1>MiniShare - Feed Principal</h1>
-<hr>
-{% for post in posts %}
-    <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-        <p><strong><a href="{% url 'perfil_utilizador' post.autor.username %}">@{{ post.autor.username }}</a></strong></p>
-        <p>{{ post.conteudo }}</p>
-        <a href="{% url 'detalhe_post' post.id %}">Ver Detalhes (❤️ {{ post.gostos }})</a>
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MiniShare — Feed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<style>
+:root{
+  --brand:#4F46E5;--brand-dark:#3730A3;--brand-light:#EEF2FF;
+  --accent:#2563EB;--white:#ffffff;--bg:#F1F5F9;
+  --surface:#ffffff;--border:#E2E8F0;
+  --text:#0F172A;--muted:#64748B;--subtle:#94A3B8;
+  --radius:14px;--radius-sm:8px;--nav-h:64px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{text-decoration:none;color:inherit}
+
+.nav{height:var(--nav-h);background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;position:sticky;top:0;z-index:100}
+.nav-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;color:var(--brand);letter-spacing:-0.3px}
+.nav-brand-icon{width:36px;height:36px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:var(--white);color:var(--muted)}
+.nav-btn:hover{background:var(--bg);color:var(--text)}
+.nav-btn-primary{background:var(--brand);color:#fff;border-color:var(--brand);font-family:inherit;}
+.nav-btn-primary:hover{background:var(--brand-dark);border-color:var(--brand-dark)}
+.nav-btn i{font-size:16px}
+
+.layout{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;display:grid;grid-template-columns:220px 1fr 240px;gap:1.5rem}
+
+.sidebar-left{display:flex;flex-direction:column;gap:3px;padding-top:2px}
+.side-profile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.side-av{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;background:linear-gradient(135deg,#4F46E5,#2563EB);margin-bottom:10px;border:3px solid #fff;box-shadow:0 0 0 1px var(--border)}
+.side-name{font-size:14px;font-weight:600;color:var(--text)}
+.side-handle{font-size:12px;color:var(--subtle);margin-top:2px}
+.side-stats{display:flex;gap:1rem;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);width:100%;justify-content:center}
+.side-stat-val{font-size:16px;font-weight:700;color:var(--text)}
+.side-stat-lbl{font-size:11px;color:var(--subtle)}
+.side-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s}
+.side-item:hover{background:var(--brand-light);color:var(--brand)}
+.side-item.active{background:var(--brand-light);color:var(--brand)}
+.side-item i{font-size:17px}
+.side-divider{height:1px;background:var(--border);margin:6px 0}
+
+.feed{display:flex;flex-direction:column;gap:14px}
+
+.compose{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:block;}
+.compose-header{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.av-compose{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#4F46E5,#2563EB);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.compose textarea{flex:1;width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:14px;font-family:inherit;resize:none;outline:none;color:var(--text);background:#FAFBFF;transition:border-color .15s,background .15s;line-height:1.6}
+.compose textarea:focus{border-color:var(--brand);background:var(--white)}
+.compose-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)}
+.compose-tools{display:flex;gap:4px}
+.tool-btn{width:34px;height:34px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;color:var(--muted);font-size:17px;transition:all .15s}
+.tool-btn:hover{background:var(--brand-light);color:var(--brand)}
+.btn-publish{display:flex;align-items:center;gap:7px;padding:9px 20px;border-radius:var(--radius-sm);background:var(--brand);color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn-publish:hover{background:var(--brand-dark)}
+.btn-publish i{font-size:15px}
+
+.post{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;transition:border-color .15s}
+.post:hover{border-color:#C7D2FE}
+.post-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.post-meta{flex:1;min-width:0}
+.post-fullname{font-size:14px;font-weight:600;color:var(--text);display:block;line-height:1.2}
+.post-username{font-size:12px;color:var(--brand);display:block;margin-top:1px}
+.post-username:hover{text-decoration:underline}
+.post-time{font-size:12px;color:var(--subtle);display:block}
+.post-more{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;color:var(--subtle);font-size:18px;transition:all .15s}
+.post-more:hover{background:var(--bg);color:var(--muted)}
+.post-body{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:14px}
+.post-footer{display:flex;align-items:center;gap:4px;padding-top:12px;border-top:1px solid var(--border)}
+.action-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--radius-sm);border:none;background:none;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;font-family:inherit}
+.action-btn:hover{background:var(--brand-light);color:var(--brand)}
+.action-btn i{font-size:16px}
+.action-btn.like:hover{background:#FEF2F2;color:#EF4444}
+.view-btn{margin-left:auto;display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--white);color:var(--brand);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
+.view-btn:hover{background:var(--brand-light);border-color:#C7D2FE}
+.view-btn i{font-size:14px}
+
+.sidebar-right{display:flex;flex-direction:column;gap:14px;padding-top:2px}
+.widget{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.widget-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px}
+.trend-item{padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.trend-item:last-child{border-bottom:none}
+.trend-tag{font-weight:600;color:var(--brand)}
+.trend-count{font-size:12px;color:var(--subtle);margin-top:2px}
+
+.no-posts {text-align:center;padding:2rem;color:var(--muted);font-size:14px;}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar-left,.sidebar-right{display:none}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-brand" href="{% url 'pagina_inicial' %}">
+    <div class="nav-brand-icon"><i class="ti ti-share-2"></i></div>
+    MiniShare
+  </a>
+  <div class="nav-right">
+    {% if user.is_authenticated %}
+      <a href="{% url 'perfil_utilizador' user.username %}" class="nav-btn"><i class="ti ti-user"></i> Perfil</a>
+      <form action="/logout/" method="POST" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="nav-btn nav-btn-primary"><i class="ti ti-logout"></i> Sair</button>
+      </form>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="layout">
+
+  <aside class="sidebar-left">
+    {% if user.is_authenticated %}
+    <div class="side-profile">
+      <div class="side-av">{{ user.username|slice:":2"|upper }}</div>
+      <div class="side-name">{{ user.get_full_name|default:user.username }}</div>
+      <div class="side-handle">@{{ user.username }}</div>
+      <div class="side-stats">
+        <div class="side-stat"><div class="side-stat-val">{{ posts.count }}</div><div class="side-stat-lbl">Posts</div></div>
+      </div>
     </div>
-{% endfor %}
+    {% endif %}
+    <a href="{% url 'pagina_inicial' %}" class="side-item active"><i class="ti ti-home"></i> Feed</a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'perfil_utilizador' user.username %}" class="side-item"><i class="ti ti-user"></i> Perfil</a>
+    {% endif %}
+    <div class="side-item"><i class="ti ti-bell"></i> Notificações</div>
+    <div class="side-item"><i class="ti ti-search"></i> Explorar</div>
+    <div class="side-divider"></div>
+    <div class="side-item"><i class="ti ti-settings"></i> Definições</div>
+  </aside>
+
+  <main class="feed">
+    {% if user.is_authenticated %}
+    <form action="{% url 'pagina_inicial' %}" method="POST" class="compose">
+      {% csrf_token %}
+      <div class="compose-header">
+        <div class="av-compose">{{ user.username|slice:":2"|upper }}</div>
+        <textarea name="conteudo" rows="3" placeholder="O que tens para partilhar hoje, {{ user.username }}?" required></textarea>
+      </div>
+      <div class="compose-footer">
+        <div class="compose-tools">
+          <button type="button" class="tool-btn" title="Imagem"><i class="ti ti-photo"></i></button>
+          <button type="button" class="tool-btn" title="Link"><i class="ti ti-link"></i></button>
+          <button type="button" class="tool-btn" title="Emoji"><i class="ti ti-mood-smile"></i></button>
+        </div>
+        <button type="submit" class="btn-publish"><i class="ti ti-send"></i> Publicar</button>
+      </div>
+    </form>
+    {% endif %}
+
+    {% for post in posts %}
+    <article class="post">
+      <div class="post-header">
+        <div class="av" style="background:linear-gradient(135deg,#4F46E5,#2563EB)">
+          {{ post.autor.username|slice:":2"|upper }}
+        </div>
+        <div class="post-meta">
+          <span class="post-fullname">{{ post.autor.get_full_name|default:post.autor.username }}</span>
+          <a class="post-username" href="{% url 'perfil_utilizador' post.autor.username %}">@{{ post.autor.username }}</a>
+          <span class="post-time">{{ post.data_criacao|date:"d/m/Y H:i" }}</span>
+        </div>
+        <button class="post-more"><i class="ti ti-dots"></i></button>
+      </div>
+      <p class="post-body">{{ post.conteudo }}</p>
+      <div class="post-footer">
+        <form action="{% url 'detalhe_post' post.id %}" method="POST" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="action-btn like"><i class="ti ti-heart"></i> {{ post.gostos }}</button>
+        </form>
+        <button type="button" class="action-btn"><i class="ti ti-message-circle"></i> 0</button>
+        <button type="button" class="action-btn"><i class="ti ti-share"></i> Partilhar</button>
+        <a href="{% url 'detalhe_post' post.id %}" class="view-btn">Ver detalhes <i class="ti ti-arrow-right"></i></a>
+      </div>
+    </article>
+    {% empty %}
+    <div class="widget no-posts">
+      <i class="ti ti-news" style="font-size: 32px; color: var(--subtle);"></i>
+      <p style="margin-top: 10px;">Ainda não há publicações no feed.</p>
+    </div>
+    {% endfor %}
+
+  </main>
+
+  <aside class="sidebar-right">
+    <div class="widget">
+      <div class="widget-title">Em destaque</div>
+      <div class="trend-item"><div class="trend-tag">#MiniShare</div><div class="trend-count">1.2k publicações</div></div>
+      <div class="trend-item"><div class="trend-tag">#Django</div><div class="trend-count">840 publicações</div></div>
+    </div>
+  </aside>
+
+</div>
+</body>
+</html>
